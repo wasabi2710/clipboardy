@@ -1,0 +1,3 @@
+C:/Users/emvan/Documents/dev/cpp/clipboardy/build/CMakeFiles/clipboardy.dir
+C:/Users/emvan/Documents/dev/cpp/clipboardy/build/CMakeFiles/edit_cache.dir
+C:/Users/emvan/Documents/dev/cpp/clipboardy/build/CMakeFiles/rebuild_cache.dir
