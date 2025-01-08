@@ -1,5 +1,5 @@
 # ninja log v6
-20	600	7580225947517927	CMakeFiles/clipboardy.dir/src/wndow.c.obj	8792d7450e7d1cf2
-600	670	7580225953327758	clipboardy.exe	7e783d0bdff7e272
-20	597	7580226153627389	CMakeFiles/clipboardy.dir/src/wndow.c.obj	8792d7450e7d1cf2
-598	667	7580226159411458	clipboardy.exe	7e783d0bdff7e272
+616	704	7580269545394022	clipboardy.exe	7e783d0bdff7e272
+20	616	7580269539431107	CMakeFiles/clipboardy.dir/src/wndow.c.obj	8792d7450e7d1cf2
+19	628	7580269783371362	CMakeFiles/clipboardy.dir/src/wndow.c.obj	8792d7450e7d1cf2
+628	698	7580269789466758	clipboardy.exe	7e783d0bdff7e272

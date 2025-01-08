@@ -3,8 +3,7 @@
 #include <stdio.h>
 
 char* getClipText() {
-
-    char* capText;
+    char* capText = NULL;
 
     // initialize clipboard
     if(!OpenClipboard(NULL)) {
@@ -20,7 +19,11 @@ char* getClipText() {
             if (hglobal != NULL) {
                 char* ptext = (char*)GlobalLock(hglobal);
                 if (ptext != NULL) {
-                    capText = ptext;
+                    // allocate the mem for copying
+                    capText = (char*)malloc(strlen(ptext) + 1);
+                    if (capText != NULL) {
+                        strcpy(capText, ptext);
+                    }
                     GlobalUnlock(hglobal);
                 }
             }
@@ -28,24 +31,27 @@ char* getClipText() {
     }
 
     CloseClipboard();
-
     return capText;
-
 }
-
+ 
 int main() {
 
-    char* capText;
+    char* capText = "";
     char* prevText = "";
 
     while (1) { 
-        Sleep(500);
+        Sleep(100);
         capText = getClipText();
         
-        if (capText && strcmp(capText, prevText) != 0) {
+        if (capText && (!prevText || strcmp(capText, prevText) != 0)) {
             printf("Captured: %s\n", capText);
             prevText = capText;
-        } 
+            //free prevText to renew
+            free(prevText);
+        } else {
+            // free the captext allocation
+            free(capText);
+        }
     }    
 
     return 0;
