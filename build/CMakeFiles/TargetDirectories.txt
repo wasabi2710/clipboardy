@@ -1,3 +1,3 @@
-C:/Users/Administrator/Documents/DEV/cpp/clipboardy/build/CMakeFiles/clipboardy.dir
-C:/Users/Administrator/Documents/DEV/cpp/clipboardy/build/CMakeFiles/edit_cache.dir
-C:/Users/Administrator/Documents/DEV/cpp/clipboardy/build/CMakeFiles/rebuild_cache.dir
+/home/wasabi/Documents/dev/buildessentials/clipboardy/build/CMakeFiles/clipboardy.dir
+/home/wasabi/Documents/dev/buildessentials/clipboardy/build/CMakeFiles/edit_cache.dir
+/home/wasabi/Documents/dev/buildessentials/clipboardy/build/CMakeFiles/rebuild_cache.dir
