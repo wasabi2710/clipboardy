@@ -224,6 +224,14 @@
 #  define COMPILER_VERSION_PATCH DEC(__PGIC_PATCHLEVEL__)
 # endif
 
+#elif defined(__clang__) && defined(__cray__)
+# define COMPILER_ID "CrayClang"
+# define COMPILER_VERSION_MAJOR DEC(__cray_major__)
+# define COMPILER_VERSION_MINOR DEC(__cray_minor__)
+# define COMPILER_VERSION_PATCH DEC(__cray_patchlevel__)
+# define COMPILER_VERSION_INTERNAL_STR __clang_version__
+
+
 #elif defined(_CRAYC)
 # define COMPILER_ID "Cray"
 # define COMPILER_VERSION_MAJOR DEC(_RELEASE_MAJOR)
@@ -275,6 +283,12 @@
   # define COMPILER_VERSION_MINOR DEC(__VERSION__ % 100)
 # define COMPILER_VERSION_INTERNAL DEC(__VERSION__)
 
+#elif defined(__ORANGEC__)
+# define COMPILER_ID "OrangeC"
+# define COMPILER_VERSION_MAJOR DEC(__ORANGEC_MAJOR__)
+# define COMPILER_VERSION_MINOR DEC(__ORANGEC_MINOR__)
+# define COMPILER_VERSION_PATCH DEC(__ORANGEC_PATCHLEVEL__)
+
 #elif defined(__TINYC__)
 # define COMPILER_ID "TinyCC"
 
@@ -318,8 +332,15 @@
 # define COMPILER_ID "ARMClang"
   # define COMPILER_VERSION_MAJOR DEC(__ARMCOMPILER_VERSION/1000000)
   # define COMPILER_VERSION_MINOR DEC(__ARMCOMPILER_VERSION/10000 % 100)
-  # define COMPILER_VERSION_PATCH DEC(__ARMCOMPILER_VERSION     % 10000)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCOMPILER_VERSION/100   % 100)
 # define COMPILER_VERSION_INTERNAL DEC(__ARMCOMPILER_VERSION)
+
+#elif defined(__clang__) && defined(__ti__)
+# define COMPILER_ID "TIClang"
+  # define COMPILER_VERSION_MAJOR DEC(__ti_major__)
+  # define COMPILER_VERSION_MINOR DEC(__ti_minor__)
+  # define COMPILER_VERSION_PATCH DEC(__ti_patchlevel__)
+# define COMPILER_VERSION_INTERNAL DEC(__ti_version__)
 
 #elif defined(__clang__)
 # define COMPILER_ID "Clang"
@@ -337,10 +358,8 @@
 
 #elif defined(__LCC__) && (defined(__GNUC__) || defined(__GNUG__) || defined(__MCST__))
 # define COMPILER_ID "LCC"
-# define COMPILER_VERSION_MAJOR DEC(1)
-# if defined(__LCC__)
-#  define COMPILER_VERSION_MINOR DEC(__LCC__- 100)
-# endif
+# define COMPILER_VERSION_MAJOR DEC(__LCC__ / 100)
+# define COMPILER_VERSION_MINOR DEC(__LCC__ % 100)
 # if defined(__LCC_MINOR__)
 #  define COMPILER_VERSION_PATCH DEC(__LCC_MINOR__)
 # endif
@@ -667,6 +686,14 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
 #  define ARCHITECTURE_ID ""
 # endif
 
+#elif defined(__clang__) && defined(__ti__)
+# if defined(__ARM_ARCH)
+#  define ARCHITECTURE_ID "Arm"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
 #elif defined(__TI_COMPILER_VERSION__)
 # if defined(__TI_ARM__)
 #  define ARCHITECTURE_ID "ARM"
@@ -800,19 +827,28 @@ char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";
 
 
 
+#define C_STD_99 199901L
+#define C_STD_11 201112L
+#define C_STD_17 201710L
+#define C_STD_23 202311L
+
+#ifdef __STDC_VERSION__
+#  define C_STD __STDC_VERSION__
+#endif
+
 #if !defined(__STDC__) && !defined(__clang__)
 # if defined(_MSC_VER) || defined(__ibmxl__) || defined(__IBMC__)
 #  define C_VERSION "90"
 # else
 #  define C_VERSION
 # endif
-#elif __STDC_VERSION__ > 201710L
+#elif C_STD > C_STD_17
 # define C_VERSION "23"
-#elif __STDC_VERSION__ >= 201710L
+#elif C_STD > C_STD_11
 # define C_VERSION "17"
-#elif __STDC_VERSION__ >= 201000L
+#elif C_STD > C_STD_99
 # define C_VERSION "11"
-#elif __STDC_VERSION__ >= 199901L
+#elif C_STD >= C_STD_99
 # define C_VERSION "99"
 #else
 # define C_VERSION "90"

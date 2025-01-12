@@ -1,14 +1,19 @@
 cmake_minimum_required(VERSION 3.25.1)
 project(clipboardy)
 
+add_executable(${PROJECT_NAME} src/main.c) 
+
 if (WIN32) 
+
     message(STATUS "Building on Windows")
-    add_executable(${PROJECT_NAME} src/wndow.c) 
+    target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
+
 elseif(UNIX AND NOT APPLE) 
+
     message(STATUS "Building on Linux")
-    add_executable(${PROJECT_NAME} src/linux.c)
     find_package(X11 REQUIRED)
     target_link_libraries(${PROJECT_NAME} X11)
+
 endif()
 
 # if (WIN32)
