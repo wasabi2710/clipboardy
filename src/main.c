@@ -4,7 +4,8 @@
 #endif
 #include <stdio.h>
 
-int main() {  
+// prototype: socket on windows
+void win32Sock() {
     WSADATA wsaData;
     SOCKET sockfd;
 
@@ -24,6 +25,22 @@ int main() {
     printf("Socket created successfully\n");
 
     closesocket(sockfd);
+}
+
+// prototype: linux socket.h
+void linSock() {
+
+}
+
+
+int main() {  
+
+    #if defined(_WIN32)
+    printf("Socket on Windows\n");
+    winsock32();
+    #elif
+    printf("Socket on Linux\n");
+    #endif
 
     return 0;
 }
