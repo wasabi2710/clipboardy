@@ -1,11 +1,9 @@
-#if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#endif
 #include <stdio.h>
+#include "headers/socket_common.h"
 
-// prototype: socket on windows
-void win32Sock() {
+void init_socket() {
     WSADATA wsaData;
     SOCKET sockfd;
 
@@ -27,20 +25,10 @@ void win32Sock() {
     closesocket(sockfd);
 }
 
-// prototype: linux socket.h
-void linSock() {
-
-}
-
-
 int main() {  
 
-    #if defined(_WIN32)
     printf("Socket on Windows\n");
-    winsock32();
-    #elif
-    printf("Socket on Linux\n");
-    #endif
+    init_socket();
 
     return 0;
 }
