@@ -7,7 +7,6 @@ int init_socket() {
     WSADATA wsaData;
     SOCKET sockfd;
 
-    // init winsock
     if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
         printf("Failed to init Winsock. Error code: %d\n", WSAGetLastError());
         return 1;
@@ -42,12 +41,13 @@ int main() {
     if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         perror("Failed bind");
         closesocket(sockfd);    
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE)  ;
     }
 
+   
     printf("Binded successfully!\n");
 
-    // listen for connection
+    // listen for connections
     if (listen(sockfd, 5) == SOCKET_ERROR) {
         perror("Failed listening");
         closesocket(sockfd);
@@ -61,7 +61,7 @@ int main() {
 
         connfd = accept(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen);
         if (connfd == SOCKET_ERROR) {
-            perror("Failed acceptitng connection");
+            perror("Failed accepting connection");
             continue;
         }
 
@@ -69,10 +69,17 @@ int main() {
         inet_ntop(AF_INET, &clientAddr.sin_addr, clientIp, INET_ADDRSTRLEN);
         printf("Connection from %s:%d\n", clientIp, ntohs(clientAddr.sin_port));
 
+        //send raw string
+        char* msg = "HI IM SERVER";
+        if (send(connfd, msg, strlen(msg), 0) == SOCKET_ERROR) {
+            perror("Message sent error\n");
+        } else {
+            printf("Message sent!\n");
+        }
+
         closesocket(connfd);
     }
 
     closesocket(sockfd);
-
     return 0;
 }
