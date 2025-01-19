@@ -3,24 +3,22 @@
 #include <stdio.h>
 #include "headers/socket_common.h"
 
+#define PORT 1234
+
 int init_socket() {
     WSADATA wsaData;
     SOCKET sockfd;
-
     if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
         printf("Failed to init Winsock. Error code: %d\n", WSAGetLastError());
         return 1;
     }
-
     sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd == INVALID_SOCKET) {
         printf("Socket creation failed. Error code: %d\n", WSAGetLastError());
         WSACleanup();
         return 1;
     }
-
     printf("Socket created successfully\n");
-
     return sockfd;
 }
 
@@ -44,7 +42,6 @@ int main() {
         exit(EXIT_FAILURE)  ;
     }
 
-   
     printf("Binded successfully!\n");
 
     // listen for connections
@@ -58,7 +55,6 @@ int main() {
 
     // acceptance
     while (1) {
-
         connfd = accept(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen);
         if (connfd == SOCKET_ERROR) {
             perror("Failed accepting connection");
