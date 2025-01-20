@@ -1,1 +1,1 @@
-cmake -S . -B build && cmake --build build && build\clipboardy.exe
+cmake -DBUILD_MODE=%1 -S . -B build && cmake --build build && build\clipboardy.exe
