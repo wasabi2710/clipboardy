@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 SOCKET socketCreate();
-void bufferReceiver();
-void relay(char* clipboard);
+void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char* recBuffer, size_t recBufferSize);
+void relay(SOCKET sockfd, const char* clipboard);
 
 #endif

@@ -1,103 +1,81 @@
 #include "server.h"
-#include <psdk_inc/_fd_types.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <stdio.h>
 
-WSADATA wsaData;
-SOCKET sockfd;
-
-struct sockaddr_in serverAddr;
-
-//define handlers for recvfrom
-//buffers
-size_t recBufferSize = BUFSIZ;
-char* recBuffer;
-//broadcaster addr
-struct sockaddr_in senderAddr;
-socklen_t senderAddrLen = sizeof(senderAddr);
-char senderAddrIP[INET_ADDRSTRLEN];
-
-//select for recvfrom-blocking thread
-fd_set readfds;
-struct timeval timeout;
-
-//socket creation
 SOCKET socketCreate() {
-
-    // initialize winsock
+    WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        perror("Failed initializing winsock");
-        WSACleanup();
-        exit(EXIT_FAILURE);        
+        printf("WSA Error: %d\n", WSAGetLastError());
+        exit(EXIT_FAILURE);
     }
-    printf("Winsock initialzed\n");
-    
-    sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sockfd == SOCKET_ERROR) {
-        perror("Failed initializing datagram socket");
+    printf("Winsock initialized\n");
+
+    SOCKET sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sockfd == INVALID_SOCKET) {
+        printf("WSA Error: %d\n", WSAGetLastError());
+        WSACleanup();
         exit(EXIT_FAILURE);
     }
     printf("DG Socket initialized\n");
 
-    serverAddr.sin_family = AF_INET; //ipv4
+    struct sockaddr_in serverAddr = {0};
+    serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(DEFAULT_PORT);
-    serverAddr.sin_addr.s_addr = INADDR_ANY; //set up for binding to all interfaces
-    
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
     if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        perror("Server binding failed");
+        printf("WSA Error: %d\n", WSAGetLastError());
         closesocket(sockfd);
         WSACleanup();
         exit(EXIT_FAILURE);
     }
-    printf("Server binded\n");
 
+    printf("Server binded\n");
     return sockfd;
 }
 
-// clipboard buffer sender
-void relay(char* clipboard) {
-
-    //enable broadcasting
+void relay(SOCKET sockfd, const char *clipboard) {
     int enable = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, (char *)&enable, sizeof(enable)) == SOCKET_ERROR) {
-        perror("Failed enabling broadcasting");
-        exit(EXIT_FAILURE);
+        printf("WSA Error: %d\n", WSAGetLastError());
     }
 
-    //define broadcasting addr
-    struct sockaddr_in broadcastAddr;
-    broadcastAddr.sin_family = AF_INET; //ipv4
+    struct sockaddr_in broadcastAddr = {0};
+    broadcastAddr.sin_family = AF_INET;
     broadcastAddr.sin_port = htons(DEFAULT_PORT);
-    inet_pton(AF_INET, BROADCASTING_ADDR, &broadcastAddr.sin_addr.s_addr); //convert straddr to binary
+    
+    if (inet_pton(AF_INET, BROADCASTING_ADDR, &broadcastAddr.sin_addr.s_addr) <= 0) {
+        printf("Invalid broadcast address\n");
+        return;
+    }
 
     if (sendto(sockfd, clipboard, strlen(clipboard), 0, (struct sockaddr *)&broadcastAddr, sizeof(broadcastAddr)) == SOCKET_ERROR) {
-        perror("Failed broadcasting buffers");
-        exit(EXIT_FAILURE);
+        printf("WSA Error: %d\n", WSAGetLastError());
+    } else {
+        printf("Buffer broadcasted\n");
     }
-    printf("Buffer broadcasted\n");
-
 }
 
-// create listener
-void bufferReceiver() {
-    // set up select() to wait for either socket or clipboard changes
+void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char *recBuffer, size_t recBufferSize) {
+    struct sockaddr_in senderAddr;
+    socklen_t senderAddrLen = sizeof(senderAddr);
+    
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000; //100ms
+
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
 
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 100000; //100ms timeout
-
     int activity = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
-
-    recBuffer = malloc(recBufferSize);
-
     if (activity > 0 && FD_ISSET(sockfd, &readfds)) {
         int receivedData = recvfrom(sockfd, recBuffer, recBufferSize - 1, 0, (struct sockaddr *)&senderAddr, &senderAddrLen);
         if (receivedData == SOCKET_ERROR) {
-            perror("Received Buffer failed");
-            free(recBuffer);
+            printf("WSA Error: %d\n", WSAGetLastError());
+            return;
         }
-        recBuffer[receivedData] = '\0'; //cast null termination
-        printf("Message received: %s\n", recBuffer);  
+
+        recBuffer[receivedData] = '\0';
+        printf("Message received: %s\n", recBuffer);
     }
 }
