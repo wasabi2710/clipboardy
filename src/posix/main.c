@@ -14,12 +14,16 @@ int main() {
         usleep(100000); // Sleep for 100ms (POSIX compatible)
 
         char* currentClipData = clipboard(); // Get copied buffers
-        if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
-            relay(sockfd, currentClipData); // Relay the data
-            free(prevClipData); // Free previous buffer
-            prevClipData = currentClipData;
-        } else {
-            free(currentClipData); // Free if no change
+        if (currentClipData) {
+            printf("Current Clipboard Data: %s\n", currentClipData); // Debug print
+            if (!prevClipData || strcmp(currentClipData, prevClipData) != 0) {
+                printf("Clipboard has changed. Relay data...\n");
+                relay(sockfd, currentClipData); // Relay the data
+                free(prevClipData); // Free previous buffer
+                prevClipData = currentClipData;
+            } else {
+                free(currentClipData); // Free if no change
+            }
         }
     }
 
