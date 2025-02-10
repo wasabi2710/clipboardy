@@ -1,72 +1,34 @@
+#include "server.h"
 #include "clipboard.h"
 
-#ifdef __APPLE__
-    #include <stdlib.h>
-#elif __linux__
-    #include <X11/Xlib.h>
-    #include <X11/Xutil.h>
-    #include <stdlib.h>
-#endif
+int main() {
+    int sockfd = socketCreate(); // create UDP socket
+    fd_set readfds;
+    struct timeval timeout;
+    size_t recBufferSize = 65507;
+    char* recBuffer = malloc(recBufferSize);
+    char* prevClipData = NULL;
 
-char* clipboard() {
-    char* rawData = NULL;
+    while (1) {
+        bufferReceiver(sockfd, &readfds, &timeout, recBuffer, recBufferSize);
+        usleep(100000); // Sleep for 100ms (POSIX compatible)
 
-#ifdef __APPLE__
-    // macOS clipboard handling using pbpaste
-    FILE* fp = popen("pbpaste", "r");
-    if (fp != NULL) {
-        size_t bufferSize = 1024;
-        size_t totalBytesRead = 0;
-        size_t bytesRead = 0;
-        rawData = (char*)malloc(bufferSize);
-        if (rawData != NULL) {
-            while ((bytesRead = fread(rawData + totalBytesRead, 1, bufferSize - totalBytesRead - 1, fp)) > 0) {
-                totalBytesRead += bytesRead;
-                if (totalBytesRead >= bufferSize - 1) {
-                    bufferSize *= 2;
-                    rawData = (char*)realloc(rawData, bufferSize);
-                    if (rawData == NULL) {
-                        break;
-                    }
-                }
-            }
-            if (rawData != NULL) {
-                rawData[totalBytesRead] = '\0'; // null-terminate the string
+        char* currentClipData = clipboard(); // Get copied buffers
+        if (currentClipData) {
+            printf("Current Clipboard Data: %s\n", currentClipData); // Debug print
+            if (!prevClipData || strcmp(currentClipData, prevClipData) != 0) {
+                printf("Clipboard has changed. Relay data...\n");
+                relay(sockfd, currentClipData); // Relay the data
+                free(prevClipData); // Free previous buffer
+                prevClipData = currentClipData;
+            } else {
+                free(currentClipData); // Free if no change
             }
         }
-        fclose(fp);
     }
 
-#elif __linux__
-    // Linux clipboard handling using X11
-    Display *display = XOpenDisplay(NULL);
-    if (display == NULL) {
-        perror("Unable to open X display");
-        return NULL;
-    }
-
-    Window window = DefaultRootWindow(display);
-    Atom clipboardAtom = XInternAtom(display, "CLIPBOARD", False);
-    Atom type;
-    int format;
-    unsigned long length, remaining;
-    unsigned char *data = NULL;
-
-    Atom property = XInternAtom(display, "PRIMARY", False);
-    if (XGetWindowProperty(display, window, property, 0, (~0L), False, AnyPropertyType,
-                          &type, &format, &length, &remaining, &data) == Success) {
-        if (data) {
-            rawData = (char *)malloc(length + 1);
-            if (rawData != NULL) {
-                memcpy(rawData, data, length);
-                rawData[length] = '\0';
-            }
-            XFree(data);
-        }
-    }
-
-    XCloseDisplay(display);
-#endif
-
-    return rawData;
+    // Cleanup
+    free(prevClipData);
+    close(sockfd); // POSIX uses close() instead of closesocket()
+    return 0;
 }
