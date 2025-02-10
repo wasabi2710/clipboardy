@@ -8,22 +8,21 @@ int main() {
     size_t recBufferSize = 65507;
     char* recBuffer = malloc(recBufferSize);
     char* prevClipData = NULL;
+    char* currentClipData = NULL;
 
     while (1) {
         bufferReceiver(sockfd, &readfds, &timeout, recBuffer, recBufferSize);
-        usleep(100000); // Sleep for 100ms (POSIX compatible)
+        usleep(10000); // Sleep for 100ms (POSIX compatible)
 
-        char* currentClipData = clipboard(); // Get copied buffers
-        if (currentClipData) {
-            printf("Current Clipboard Data: %s\n", currentClipData); // Debug print
-            if (!prevClipData || strcmp(currentClipData, prevClipData) != 0) {
-                printf("Clipboard has changed. Relay data...\n");
-                relay(sockfd, currentClipData); // Relay the data
-                free(prevClipData); // Free previous buffer
-                prevClipData = currentClipData;
-            } else {
-                free(currentClipData); // Free if no change
-            }
+        currentClipData = clipboard(); // Get copied buffers
+        
+        if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
+            printf("Clipboard has changed. Relay data...\n");
+            relay(sockfd, currentClipData); // Relay the data
+            free(prevClipData); // Free previous buffer
+            prevClipData = currentClipData;
+        } else {
+            free(currentClipData); // Free if no change
         }
     }
 
