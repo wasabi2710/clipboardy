@@ -17,7 +17,7 @@ char* clipboard() {
     if (fp != NULL) {
         size_t bufferSize = 1024;
         rawData = (char*)malloc(bufferSize);
-        if (rawData != NULL) 
+        if (rawData != NULL) {
             size_t bytesRead = fread(rawData, 1, bufferSize - 1, fp);
             if (bytesRead > 0) {
                 rawData[bytesRead] = '\0'; // null-terminate the string
