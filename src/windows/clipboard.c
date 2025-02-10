@@ -5,7 +5,6 @@
 #include <wingdi.h>
 
 char* clipboard() {
-    printf("windows here\n");
 
     // init clipboard
     if(!OpenClipboard(NULL)) {
