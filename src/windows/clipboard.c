@@ -4,6 +4,12 @@
 #include <windows.h>
 #include <wingdi.h>
 
+void writeToClipboard(char *clipboard) {
+
+    
+
+}
+
 char* clipboard() {
 
     // init clipboard

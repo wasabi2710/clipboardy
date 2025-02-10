@@ -9,21 +9,29 @@ int main() {
     char* recBuffer = malloc(recBufferSize);
     struct sockaddr_in senderAddr;
     char* prevClipData = NULL;
-    while(1) {
-        bufferReceiver(sockfd, readfds, timeout,recBuffer, recBufferSize);
+
+    if (!recBuffer) {
+        perror("Memory allocation failed");
+        return EXIT_FAILURE;
+    }
+
+    while (1) {
+        bufferReceiver(sockfd, readfds, timeout, recBuffer, recBufferSize);
         Sleep(100);
-        char* currentClipData = clipboard(); //get copied buffers
+
+        char* currentClipData = clipboard(); // get copied buffers
         if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
-            //printf("Current clipboard: %s\n", currentClipData);   
+            // printf("Current clipboard: %s\n", currentClipData);   
             relay(sockfd, currentClipData); // relay the data
-            free(prevClipData); // free prev buffers
+            free(prevClipData); // free previous buffers
             prevClipData = currentClipData;
         } else {
             free(currentClipData);
         }
-        
     }
-    //cleanup
+
+    // Cleanup
+    free(recBuffer);
     free(prevClipData);
     closesocket(sockfd);
     WSACleanup();

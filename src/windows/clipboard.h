@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 char* clipboard();
+void writeToClipboard(char* clipboard);
 
 #endif
 

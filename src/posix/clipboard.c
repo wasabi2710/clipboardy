@@ -12,8 +12,6 @@
     #include <unistd.h>
 #endif
 
-#define INITIAL_BUFFER_SIZE 1024
-
 char* clipboard() {
     char* rawData = NULL;
 
