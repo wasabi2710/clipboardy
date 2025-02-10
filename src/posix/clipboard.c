@@ -16,22 +16,14 @@ char* clipboard() {
     FILE* fp = popen("pbpaste", "r");
     if (fp != NULL) {
         size_t bufferSize = 1024;
-        size_t totalBytesRead = 0;
-        size_t bytesRead = 0;
         rawData = (char*)malloc(bufferSize);
-        if (rawData != NULL) {
-            while ((bytesRead = fread(rawData + totalBytesRead, 1, bufferSize - totalBytesRead - 1, fp)) > 0) {
-                totalBytesRead += bytesRead;
-                if (totalBytesRead >= bufferSize - 1) {
-                    bufferSize *= 2;
-                    rawData = (char*)realloc(rawData, bufferSize);
-                    if (rawData == NULL) {
-                        break;
-                    }
-                }
-            }
-            if (rawData != NULL) {
-                rawData[totalBytesRead] = '\0'; // null-terminate the string
+        if (rawData != NULL) 
+            size_t bytesRead = fread(rawData, 1, bufferSize - 1, fp);
+            if (bytesRead > 0) {
+                rawData[bytesRead] = '\0'; // null-terminate the string
+            } else {
+                free(rawData);
+                rawData = NULL;
             }
         }
         fclose(fp);
