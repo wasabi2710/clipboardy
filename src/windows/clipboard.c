@@ -1,5 +1,8 @@
 #include "clipboard.h"
 #include <string.h>
+#include <windef.h>
+#include <windows.h>
+#include <wingdi.h>
 
 char* clipboard() {
     // init clipboard
@@ -24,7 +27,7 @@ char* clipboard() {
                     GlobalUnlock(clipboardData); //unlock the mem
                 }
             }
-        }
+        } 
     }
 
     //cleanup
