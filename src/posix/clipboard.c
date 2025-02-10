@@ -28,25 +28,22 @@ char* clipboard() {
         return NULL;
     }
 
-    while (1) {
-        size_t bytesRead = fread(rawData + totalBytesRead, 1, bufferSize - totalBytesRead - 1, fp);
-        if (bytesRead == 0) {
-            break; // End of file or error
+    size_t bytesRead = fread(rawData + totalBytesRead, 1, bufferSize - totalBytesRead - 1, fp);
+    if (bytesRead == 0) {
+        break; // End of file or error
+    }
+    totalBytesRead += bytesRead;
+    // Resize buffer if needed
+    if (totalBytesRead >= bufferSize - 1) {
+        bufferSize *= 2;
+        char* newData = (char*)realloc(rawData, bufferSize);
+        if (newData == NULL) {
+            perror("Failed to reallocate memory");
+            free(rawData);
+            pclose(fp);
+            return NULL;
         }
-        totalBytesRead += bytesRead;
-
-        // Resize buffer if needed
-        if (totalBytesRead >= bufferSize - 1) {
-            bufferSize *= 2;
-            char* newData = (char*)realloc(rawData, bufferSize);
-            if (newData == NULL) {
-                perror("Failed to reallocate memory");
-                free(rawData);
-                pclose(fp);
-                return NULL;
-            }
-            rawData = newData;
-        }
+        rawData = newData;
     }
 
     if (ferror(fp)) {
