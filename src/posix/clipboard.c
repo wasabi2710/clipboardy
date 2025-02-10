@@ -1,79 +1,87 @@
 #include "clipboard.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-#ifdef CLIPBOARD_PBCOPY
-#include <stdlib.h>
+#ifdef __APPLE__
+    #include <CoreFoundation/CoreFoundation.h>
+    #include <ApplicationServices/ApplicationServices.h>
+#elif __linux__
+    #include <X11/Xlib.h>
+    #include <X11/Xutil.h>
+    #include <stdlib.h>
+#endif
 
 char* clipboard() {
-    // For macOS, use pbpaste
-    FILE *fp = popen("pbpaste", "r");
-    if (fp == NULL) {
-        perror("Failed to run pbpaste");
+    char* rawData = NULL;
+
+#ifdef __APPLE__
+    // macOS clipboard handling using pbpaste
+    CFDataRef clipboardData = NULL;
+    CFStringRef clipboardString = NULL;
+
+    // Create the pasteboard object
+    PasteboardRef pasteboard;
+    CFStringRef pasteboardName = CFSTR("com.apple.general.pasteboard");
+    OSStatus err = PasteboardCreate(pasteboardName, &pasteboard);
+    
+    if (err == noErr) {
+        PasteboardSynchronize(pasteboard);
+        ItemCount itemCount;
+        PasteboardGetItemCount(pasteboard, &itemCount);
+
+        if (itemCount > 0) {
+            PasteboardItemID itemID;
+            err = PasteboardGetItemIdentifier(pasteboard, 1, &itemID);
+            if (err == noErr) {
+                CFTypeRef dataType;
+                err = PasteboardCopyItemFlavorData(pasteboard, itemID, kPasteboardFlavorTypeText, &dataType);
+                if (err == noErr) {
+                    clipboardString = (CFStringRef) dataType;
+                    if (clipboardString) {
+                        rawData = (char*)malloc(CFStringGetLength(clipboardString) + 1);
+                        if (rawData != NULL) {
+                            CFStringGetCString(clipboardString, rawData, CFStringGetLength(clipboardString) + 1, kCFStringEncodingUTF8);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if (rawData == NULL) {
         return NULL;
     }
 
-    // Find the size of the clipboard content
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    // Read the content from the clipboard
-    char* result = (char*)malloc(size + 1);
-    if (result != NULL) {
-        fread(result, 1, size, fp);
-        result[size] = '\0'; // Null-terminate
-    }
-
-    fclose(fp);
-    return result;
-}
-#else
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
-
-char* clipboard() {
-    Display* display = XOpenDisplay(NULL);
+#elif __linux__
+    // Linux clipboard handling using X11
+    Display *display = XOpenDisplay(NULL);
     if (display == NULL) {
         perror("Unable to open X display");
         return NULL;
     }
 
-    Window root = DefaultRootWindow(display);
+    Window window = DefaultRootWindow(display);
     Atom clipboardAtom = XInternAtom(display, "CLIPBOARD", False);
-    Atom targetAtom = XInternAtom(display, "UTF8_STRING", False);
-    Atom propertyAtom = XInternAtom(display, "CLIPBOARD", False);
+    Atom type;
+    int format;
+    unsigned long length, remaining;
+    unsigned char *data = NULL;
 
-    XConvertSelection(display, clipboardAtom, targetAtom, propertyAtom, root, CurrentTime);
-    XFlush(display);
-
-    XEvent event;
-    XNextEvent(display, &event);
-
-    if (event.xselection.property != None) {
-        Atom type;
-        int format;
-        unsigned long len, bytesAfter;
-        unsigned char* data = NULL;
-
-        if (XGetWindowProperty(display, root, event.xselection.property, 0, ~0L, False, AnyPropertyType,
-                               &type, &format, &len, &bytesAfter, &data) == Success) {
-            if (data != NULL) {
-                char* result = (char*)malloc(len + 1);
-                if (result != NULL) {
-                    memcpy(result, data, len);
-                    result[len] = '\0';
-                    XFree(data);
-                    XCloseDisplay(display);
-                    return result;
-                }
+    Atom property = XInternAtom(display, "PRIMARY", False);
+    if (XGetWindowProperty(display, window, property, 0, (~0L), False, AnyPropertyType,
+                          &type, &format, &length, &remaining, &data) == Success) {
+        if (data) {
+            rawData = (char *)malloc(length + 1);
+            if (rawData != NULL) {
+                memcpy(rawData, data, length);
+                rawData[length] = '\0';
             }
+            XFree(data);
         }
     }
 
     XCloseDisplay(display);
-    return NULL;
-}
 #endif
+
+    return rawData;
+}
