@@ -14,20 +14,50 @@ char* clipboard() {
 #ifdef __APPLE__
     // macOS clipboard handling using pbpaste
     FILE* fp = popen("pbpaste", "r");
-    if (fp != NULL) {
-        size_t bufferSize = 1024;
-        rawData = (char*)malloc(bufferSize);
-        if (rawData != NULL) {
-            size_t bytesRead = fread(rawData, 1, bufferSize - 1, fp);
-            if (bytesRead > 0) {
-                rawData[bytesRead] = '\0'; // null-terminate the string
-            } else {
-                free(rawData);
-                rawData = NULL;
-            }
-        }
-        fclose(fp);
+    if (fp == NULL) {
+        perror("Failed to open pbpaste");
+        return NULL;
     }
+
+    size_t bufferSize = 1024;
+    size_t totalBytesRead = 0;
+    rawData = (char*)malloc(bufferSize);
+    if (rawData == NULL) {
+        perror("Failed to allocate memory");
+        pclose(fp);
+        return NULL;
+    }
+
+    while (1) {
+        size_t bytesRead = fread(rawData + totalBytesRead, 1, bufferSize - totalBytesRead - 1, fp);
+        if (bytesRead == 0) {
+            break; // End of file or error
+        }
+        totalBytesRead += bytesRead;
+
+        // Resize buffer if needed
+        if (totalBytesRead >= bufferSize - 1) {
+            bufferSize *= 2;
+            char* newData = (char*)realloc(rawData, bufferSize);
+            if (newData == NULL) {
+                perror("Failed to reallocate memory");
+                free(rawData);
+                pclose(fp);
+                return NULL;
+            }
+            rawData = newData;
+        }
+    }
+
+    if (ferror(fp)) {
+        perror("Error reading from pbpaste");
+        free(rawData);
+        rawData = NULL;
+    } else {
+        rawData[totalBytesRead] = '\0'; // Null-terminate the string
+    }
+
+    pclose(fp);
 
 #elif __linux__
     // Linux clipboard handling using X11
