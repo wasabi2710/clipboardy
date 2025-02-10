@@ -12,18 +12,19 @@ char* clipboard() {
     char* rawData = NULL;
 
 #ifdef __APPLE__
-    // macOS clipboard handling using pbpaste
+
     FILE* fp = popen("pbpaste", "r");
     if (fp != NULL) {
         size_t bufferSize = 1024;
-        rawData = (char*)malloc(bufferSize);
+        char* rawData = (char*)malloc(bufferSize);
         if (rawData != NULL) {
             size_t bytesRead = fread(rawData, 1, bufferSize - 1, fp);
             if (bytesRead > 0) {
                 rawData[bytesRead] = '\0'; // null-terminate the string
+                fclose(fp);
+                return rawData;
             } else {
                 free(rawData);
-                rawData = NULL;
             }
         }
         fclose(fp);
