@@ -1,6 +1,4 @@
 #include "clipboard.h"
-#include <string.h>
-#include <stdio.h>
 
 #ifdef __APPLE__
     #include <stdlib.h>

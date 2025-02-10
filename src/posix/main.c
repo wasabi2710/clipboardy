@@ -1,9 +1,5 @@
 #include "server.h"
 #include "clipboard.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h> // For sleep()
 
 int main() {
     int sockfd = socketCreate(); // create UDP socket
