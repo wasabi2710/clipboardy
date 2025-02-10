@@ -2,7 +2,7 @@
 #define SERVER_H
 
 #define DEFAULT_PORT 1234
-#define BROADCASTING_ADDR "255.255.255.255"
+#define BROADCASTING_ADDR "192.168.1.255"
 
 #include <stdio.h>
 #include <stdlib.h>
