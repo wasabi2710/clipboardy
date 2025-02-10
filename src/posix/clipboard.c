@@ -14,21 +14,27 @@ char* clipboard() {
 #ifdef __APPLE__
 
     FILE* fp = popen("pbpaste", "r");
-    if (fp != NULL) {
-        size_t bufferSize = 1024;
-        char* rawData = (char*)malloc(bufferSize);
-        if (rawData != NULL) {
-            size_t bytesRead = fread(rawData, 1, bufferSize - 1, fp);
-            if (bytesRead > 0) {
-                rawData[bytesRead] = '\0'; // null-terminate the string
-                fclose(fp);
-                return rawData;
-            } else {
-                free(rawData);
-            }
-        }
-        fclose(fp);
+    if (fp == NULL) {
+        perror("Failed to open pbpaste");
+        return NULL;
     }
+
+    rawData = (char*)malloc(BUFFER_SIZE);
+    if (rawData == NULL) {
+        perror("Memory allocation failed");
+        fclose(fp);
+        return NULL;
+    }
+
+    size_t bytesRead = fread(rawData, 1, BUFFER_SIZE - 1, fp);
+    if (bytesRead > 0) {
+        rawData[bytesRead] = '\0';  // Null-terminate the string
+    } else {
+        free(rawData);
+        rawData = NULL;
+    }
+
+    fclose(fp);
 
 #elif __linux__
     // Linux clipboard handling using X11
