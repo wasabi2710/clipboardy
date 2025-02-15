@@ -24,7 +24,6 @@ void write_clipboard(char* clipboard) {
     }
     fprintf(pipe, "%s", clipboard);
     pclose(pipe);
-
 #endif
 }
 
