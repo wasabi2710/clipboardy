@@ -8,6 +8,7 @@
 #include <ws2tcpip.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "clipboard.h"
 
 SOCKET socketCreate();
 void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char* recBuffer, size_t recBufferSize);

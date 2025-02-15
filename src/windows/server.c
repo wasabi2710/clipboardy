@@ -1,7 +1,4 @@
 #include "server.h"
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdio.h>
 
 SOCKET socketCreate() {
     WSADATA wsaData;
@@ -76,6 +73,7 @@ void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char 
         }
 
         recBuffer[receivedData] = '\0';
-        printf("Message received: %s\n", recBuffer);
+        //printf("Message received: %s\n", recBuffer);
+        writeToClipboard(recBuffer);
     }
 }

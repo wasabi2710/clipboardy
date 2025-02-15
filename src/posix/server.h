@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h> // For close()
+#include "clipboard.h"
 
 // Function declarations for POSIX server
 int socketCreate();

@@ -1,4 +1,5 @@
 #include "server.h"
+#include "clipboard.h"
 
 int socketCreate() {
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);  // Create UDP socket
@@ -65,6 +66,7 @@ void bufferReceiver(int sockfd, fd_set *readfds, struct timeval *timeout, char *
         }
 
         recBuffer[receivedData] = '\0';
-        printf("Message received: %s\n", recBuffer);
+        //printf("Message received: %s\n", recBuffer);
+        write_clipboard(recBuffer);
     }
 }
