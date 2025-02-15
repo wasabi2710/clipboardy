@@ -73,7 +73,7 @@ void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char 
         }
 
         recBuffer[receivedData] = '\0';
-        printf("Message received: %s\n", recBuffer);
+        //printf("Message received: %s\n", recBuffer);
         writeToClipboard(recBuffer);
     }
 }
