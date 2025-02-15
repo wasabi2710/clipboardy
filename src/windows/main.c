@@ -17,7 +17,7 @@ int main() {
 
     while (1) {
         bufferReceiver(sockfd, readfds, timeout, recBuffer, recBufferSize);
-        Sleep(100);
+        Sleep(1000);
 
         char* currentClipData = clipboard(); // get copied buffers
         if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
