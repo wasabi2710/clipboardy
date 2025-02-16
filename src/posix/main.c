@@ -1,5 +1,9 @@
 #include "server.h"
 #include "clipboard.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 int main() {
     int sockfd = socketCreate(); // create UDP socket
@@ -10,24 +14,29 @@ int main() {
     char* prevClipData = NULL;
     char* currentClipData = NULL;
 
+    if (!recBuffer) {
+        perror("Failed to allocate receive buffer");
+        return 1;
+    }
+
     while (1) {
         bufferReceiver(sockfd, &readfds, &timeout, recBuffer, recBufferSize);
-        usleep(10000); // Sleep for 100ms (POSIX compatible)
+        usleep(100000); // Sleep for 100ms
 
         currentClipData = clipboard(); // Get copied buffers
         
         if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
-            printf("Clipboard has changed. Relay data...\n");
+            printf("Clipboard has changed. Relaying data...\n");
             relay(sockfd, currentClipData); // Relay the data
-            free(prevClipData); // Free previous buffer
-            prevClipData = currentClipData;
-        } else {
-            free(currentClipData); // Free if no change
+            free(prevClipData);
+            prevClipData = strdup(currentClipData); // Properly duplicate the string
         }
+        free(currentClipData); // Free if no change
     }
 
-    // Cleanup
+    // Cleanup (this part is never reached in an infinite loop, consider handling termination signals)
+    free(recBuffer);
     free(prevClipData);
-    close(sockfd); // POSIX uses close() instead of closesocket()
+    close(sockfd);
     return 0;
 }
