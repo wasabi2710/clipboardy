@@ -1,5 +1,6 @@
 #include "server.h"
 #include "clipboard.h"
+#include <consoleapi.h>
 #include <windows.h>
 
 #define WM_TRAYICON (WM_APP + 1)
@@ -14,7 +15,7 @@ LRESULT CALLBACK ClipProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             PostQuitMessage(0);
             return 0;
         case WM_COMMAND:
-            if (LOWORD(wParam) == 1 || LOWORD(wParam) == 2) {
+            if (LOWORD(wParam) == 1) {
                 PostQuitMessage(0);
             }
             return 0;
@@ -24,7 +25,6 @@ LRESULT CALLBACK ClipProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetCursorPos(&pt);
                 HMENU hMenu = CreatePopupMenu();
                 AppendMenu(hMenu, MF_STRING, 1, "Exit");
-                AppendMenu(hMenu, MF_STRING, 2, "Close");
 
                 SetForegroundWindow(hwnd);
                 TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
@@ -95,13 +95,16 @@ void createWind() {
         return;
     }
 
+    FreeConsole(); // no console
+
+    // system tray
     NOTIFYICONDATA nid = {0};
     nid.cbSize = sizeof(NOTIFYICONDATA);
     nid.hWnd = window;
     nid.uID = 1;
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     nid.uCallbackMessage = WM_USER + 1;
-    nid.hIcon = LoadIcon(NULL, IDI_INFORMATION);
+    nid.hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
     lstrcpy(nid.szTip, "Clipboardy Tray Application");
 
     if (!Shell_NotifyIcon(NIM_ADD, &nid)) {
@@ -113,7 +116,7 @@ void createWind() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_COMMAND && (msg.wParam == 1 || msg.wParam == 2)) {
+        if (msg.message == WM_COMMAND && (msg.wParam == 1)) {
             Shell_NotifyIcon(NIM_DELETE, &nid);
             PostQuitMessage(0);
         }
