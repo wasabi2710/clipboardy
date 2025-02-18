@@ -74,6 +74,6 @@ void bufferReceiver(SOCKET sockfd, fd_set readfds, struct timeval timeout, char 
         }
 
         recBuffer[receivedData] = '\0';
-        writeToClipboard(recBuffer);
+        writeToClipboard(recBuffer); // This function should be defined elsewhere
     }
 }
