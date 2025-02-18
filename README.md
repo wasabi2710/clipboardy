@@ -26,5 +26,5 @@ Clipboardy is a simple cross-platform application that monitors clipboard change
 
 ## Notes and Considerations
 
-1. It is recommended to specify the direct broadcast address for your desired subnet in the server.h file, rather than using a general broadcast address.
+1. It is recommended to specify the direct broadcast address for your desired subnet in the server.h header file, rather than using a general broadcast address.
 2. Please note that encryption is not implemented, so proceed with caution!
