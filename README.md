@@ -8,14 +8,18 @@ Clipboardy is a simple cross-platform application that monitors clipboard change
 - Uses UDP to broadcast clipboard data to other devices on the network.
 
 ## Build Requirements
+- Cmake >= 23.x.x
+  
 ### Windows
 - MSVC and Universal C Runtime Standard Library
 
 ### POSIX
 - GNU Compiler Collection
+- Clipboard Commandline Utilities (pbcopy/pbpaste, xclip)
 
 ## Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/wasabi2710/clipboardy.git
+2. Run cmake build command or the provided scripts
