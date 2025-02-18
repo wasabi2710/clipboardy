@@ -8,7 +8,7 @@ Clipboardy is a simple cross-platform application that monitors clipboard change
 - Uses UDP to broadcast clipboard data to other devices on the network.
 
 ## Build Requirements
-- Cmake >= 23.x.x
+- Cmake >= 3.25.x
   
 ### Windows
 - MSVC and Universal C Runtime Standard Library
