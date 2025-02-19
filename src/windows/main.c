@@ -1,36 +1,25 @@
 #include "server.h"
 #include "clipboard.h"
-#include <windows.h>
 #include <consoleapi.h>
+#include <windows.h>
 
-#define WM_TRAYICON (WM_USER + 1)
-#define WM_TIMER_UPDATE 1001 // Timer ID for periodic checks
+#define WM_TRAYICON (WM_APP + 1)
+#define WM_TIMER_UPDATE 1001 // Timer identifier
 
 LRESULT CALLBACK ClipProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static SOCKET sockfd;
     static char *prevClipData = NULL;
 
     switch (uMsg) {
-        case WM_CREATE:
-            sockfd = socketCreate();
-            SetTimer(hwnd, WM_TIMER_UPDATE, 1000, NULL); // Check clipboard every second
-            return 0;
-
         case WM_DESTROY:
-            KillTimer(hwnd, WM_TIMER_UPDATE);
-            Shell_NotifyIcon(NIM_DELETE, NULL);
-            free(prevClipData);
-            close(sockfd);
             PostQuitMessage(0);
             return 0;
-
         case WM_COMMAND:
             if (LOWORD(wParam) == 1) {
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
+                PostQuitMessage(0);
             }
             return 0;
-
-        case WM_TRAYICON:
+        case WM_USER + 1:
             if (lParam == WM_RBUTTONDOWN) {
                 POINT pt;
                 GetCursorPos(&pt);
@@ -40,34 +29,39 @@ LRESULT CALLBACK ClipProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 SetForegroundWindow(hwnd);
                 TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_LEFTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
                 PostMessage(hwnd, WM_NULL, 0, 0);
+
                 DestroyMenu(hMenu);
             }
             return 0;
-
+        case WM_CREATE:
+            sockfd = socketCreate();
+            return 0;
         case WM_TIMER:
             if (wParam == WM_TIMER_UPDATE) {
                 fd_set readfds;
                 struct timeval timeout;
                 size_t recBufferSize = 65507;
-                char *recBuffer = malloc(recBufferSize);
+                char* recBuffer = malloc(recBufferSize);
+
                 if (!recBuffer) {
                     perror("Memory allocation failed");
-                    return 0;
+                    return EXIT_FAILURE;
                 }
 
-                bufferReceiver(sockfd, &readfds, &timeout, recBuffer, recBufferSize);
+                bufferReceiver(sockfd, readfds, timeout, recBuffer, recBufferSize);
 
-                char *currentClipData = clipboard();
+                char* currentClipData = clipboard();
                 if (currentClipData && (!prevClipData || strcmp(currentClipData, prevClipData) != 0)) {
                     relay(sockfd, currentClipData);
                     free(prevClipData);
-                    prevClipData = strdup(currentClipData);
+                    prevClipData = currentClipData;
+                } else {
+                    free(currentClipData);
                 }
-                free(currentClipData);
+
                 free(recBuffer);
             }
             return 0;
-
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
@@ -84,24 +78,32 @@ void createWind() {
         return;
     }
 
-    HWND hwnd = CreateWindowEx(0, wndClass.lpszClassName, "Clipboardy", 0, 
-                               CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 
-                               NULL, NULL, wndClass.hInstance, NULL);
+    HWND window = CreateWindowEx(
+        0,
+        wndClass.lpszClassName,
+        "Clipboardy",
+        0,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        0, 0,
+        NULL, NULL,
+        wndClass.hInstance,
+        NULL
+    );
 
-    if (!hwnd) {
+    if (!window) {
         MessageBox(NULL, "Failed to create window", "Error", MB_OK);
         return;
     }
 
-    FreeConsole(); // Hide console window
+    FreeConsole(); // no console
 
-    // Set up tray icon
+    // system tray
     NOTIFYICONDATA nid = {0};
     nid.cbSize = sizeof(NOTIFYICONDATA);
-    nid.hWnd = hwnd;
+    nid.hWnd = window;
     nid.uID = 1;
     nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-    nid.uCallbackMessage = WM_TRAYICON;
+    nid.uCallbackMessage = WM_USER + 1;
     nid.hIcon = (HICON)LoadImage(NULL, "icon.ico", IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
     lstrcpy(nid.szTip, "Clipboardy Tray Application");
 
@@ -110,14 +112,20 @@ void createWind() {
         return;
     }
 
-    // Message loop
+    SetTimer(window, WM_TIMER_UPDATE, 1000, NULL); // Set timer for periodic updates
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_COMMAND && (msg.wParam == 1)) {
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+            PostQuitMessage(0);
+        }
+
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    KillTimer(hwnd, WM_TIMER_UPDATE); // Cleanup
+    KillTimer(window, WM_TIMER_UPDATE); // Clean up timer
     Shell_NotifyIcon(NIM_DELETE, &nid);
 }
 
