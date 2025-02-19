@@ -7,6 +7,7 @@ if(WIN32)
     add_executable(${PROJECT_NAME} src/windows/main.c src/windows/server.c src/windows/clipboard.c)
     target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
     file(COPY ${CMAKE_SOURCE_DIR}/windows/icon.ico DESTINATION ${CMAKE_BINARY_DIR}/build)
+
 elseif(APPLE)
 
     message(STATUS "Building on macOS")
@@ -16,14 +17,11 @@ elseif(APPLE)
 elseif(UNIX)
 
     message(STATUS "Building on Linux")
-    
     #check if xclip is installed
     find_program(XCLIP_PATH xclip)
-
-    if(NOT XCLIP_PATH)
+    if(NOT XCLIP_PATH)  
         message(FATAL_ERROR "xclip not found! Please install it using your package manager.")
     endif()
-
     add_executable(${PROJECT_NAME} src/posix/clipboard.c src/posix/server.c src/posix/main.c)
     find_package(X11 REQUIRED)
     target_link_libraries(${PROJECT_NAME} X11)
